@@ -1,0 +1,11 @@
+
+## API / PYTHON ##
+*.pyc
+
+## WEB / JS ##
+node_modules/
+
+.git-sources/
+tilt_modules/
+
+*.tmp
