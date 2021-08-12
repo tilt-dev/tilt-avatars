@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: tilt-avatar-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tilt-avatar-web
+  template:
+    metadata:
+      labels:
+        app: tilt-avatar-web
+    spec:
+      containers:
+        - name: tilt-avatar-web
+          image: tilt-avatar-web
+          env:
+            - name: VITE_CLIENT_PORT
+              value: '5735'
+          ports:
+            - containerPort: 3000
