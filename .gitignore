@@ -5,7 +5,7 @@
 ## WEB / JS ##
 node_modules/
 
-.git-sources/
-tilt_modules/
-
+## META / OS ##
 *.tmp
+.DS_Store
+.idea/
