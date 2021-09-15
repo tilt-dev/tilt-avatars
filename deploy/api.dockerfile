@@ -3,11 +3,11 @@ FROM python:3.9-alpine
 ENV PIP_DISABLE_PIP_VERSION_CHECK="1"
 
 WORKDIR /app
-COPY ../requirements.txt ./
+COPY api/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
   pip install -r requirements.txt
 
-COPY .. .
+COPY api/ ./api/
 
 ENV FLASK_APP=./api/app.py
 ENV FLASK_ENV=development
