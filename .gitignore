@@ -4,6 +4,7 @@
 
 ## WEB / JS ##
 node_modules/
+dist/
 
 ## META / OS ##
 *.tmp
