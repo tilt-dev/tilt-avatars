@@ -54,7 +54,6 @@ function App() {
         setAvatarURL('/api/avatar?' + new URLSearchParams(partChoices));
     }, [partChoices, loading]);
 
-    let content;
     if (error) {
         return <div>Failed to load: {error}</div>
     } else if (loading) {
