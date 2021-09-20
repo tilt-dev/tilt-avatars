@@ -1,8 +1,13 @@
 import { defineConfig } from 'vite'
 import reactRefresh from '@vitejs/plugin-react-refresh'
 
-// https://vitejs.dev/config/
 export default defineConfig({
+
+  // ↓↓↓ change to logLevel: 'info' ↓↓↓
+  logLevel: 'warn',
+  // ↑↑↑ change to logLevel: 'info' ↑↑↑
+
+
   plugins: [reactRefresh()],
   server: {
     hmr: {

@@ -7,7 +7,15 @@ import python_avatars as pa
 
 logging.getLogger('werkzeug').setLevel(logging.WARN)
 
-app = flask.Flask(__name__)
+app = flask.Flask("tilt-avatars-api")
+
+part_groups = {
+    'facial_features': ['eyebrows', 'eyes', 'mouth', 'skin_color'],
+    'hair': ['top', 'hair_color', 'facial_hair', 'facial_hair_color'],
+    # ↓↓↓ remove the leading # to uncomment ↓↓↓
+    # 'other': ['accessory']
+    # ↑↑↑ remove the leading # to uncomment ↑↑↑
+}
 
 part_mapping = {
     'top': 'HairType',
@@ -47,7 +55,7 @@ def avatar():
             # enum by value, e.g. `#262E33`
             params[p] = part_enum(params[p])
 
-    svg = pa.Avatar.random(
+    svg = pa.Avatar(
         style=pa.AvatarStyle.CIRCLE,
         background_color='#03C7D3',
         clothing=pa.ClothingType.TILT_SHIRT,
@@ -61,11 +69,7 @@ def avatar():
 def avatar_spec():
     resp = {
         'parts': part_mapping,
-        'groups': {
-          'facial_features': ['eyebrows', 'eyes', 'mouth', 'skin_color'],
-          'hair': ['top', 'hair_color', 'facial_hair', 'facial_hair_color'],
-          'other': ['accessory']
-        },
+        'groups': part_groups,
         'exclusions': {
             'facial_hair_color': {
                 'part': 'facial_hair',

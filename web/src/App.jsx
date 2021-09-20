@@ -16,9 +16,13 @@ function App() {
 
         const parts = {};
         Object.keys(spec.parts).forEach(partName => {
-            const partType = spec.parts[partName];
-            const values = Object.values(spec.values[partType]);
-            parts[partName] = values[Math.floor(Math.random() * values.length)];
+            // only pick a value for parts that exist in a group within the editor
+            // to prevent setting a part you can't change
+            if (Object.values(spec.groups).some(g => g.includes(partName))) {
+                const partType = spec.parts[partName];
+                const values = Object.values(spec.values[partType]);
+                parts[partName] = values[Math.floor(Math.random() * values.length)];
+            }
         })
         setPartChoices(parts);
     };
