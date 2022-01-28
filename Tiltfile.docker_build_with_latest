@@ -1,0 +1,35 @@
+
+
+def docker_build_with_latest(ref, context, only=[], live_update=[], use_latest=False, **kwargs):
+    if use_latest:
+        return latest_image(ref, True)
+
+    if type(live_update) == 'function':
+        live_update = live_update()
+
+    docker_build(ref+'-base', context, only=only, live_update=live_update, **kwargs)
+
+    deps = [context]
+    if len(only) > 0:
+        deps = only
+
+    custom_build(
+        ref,
+        """
+        docker tag $TILT_IMAGE_0 $EXPECTED_REF && \
+          docker push $EXPECTED_REF && \
+          docker tag $TILT_IMAGE_0 ${EXPECTED_REF%:*}:latest && \
+          docker push ${EXPECTED_REF%:*}:latest
+        """,
+        deps=deps,
+        image_deps=[ref+'-base']
+    )
+    return ref
+
+registry_host = str(local('kubectl get configmap -n kube-public local-registry-hosting -o jsonpath="{.data[\'localRegistryHosting\\.v1\']}" | yj -yj | jq -r .host')).strip()
+
+def latest_image(ref, use_latest=False):
+    if use_latest:
+        return '%s/%s' % (registry_host, ref)
+    else:
+        return ref

@@ -1,31 +1,43 @@
+load('ext://deployment', 'deployment_create')
 
 # version_settings() enforces a minimum Tilt version
 # https://docs.tilt.dev/api.html#api.version_settings
 version_settings(constraint='>=0.22.2')
+
+
+use_latest = False
+load('Tiltfile.docker_build_with_latest', 'docker_build_with_latest')
 
 # tilt-avatar-api is the backend (Python/Flask app)
 # live_update syncs changed source code files to the correct place for the Flask dev server
 # and runs pip (python package manager) to update dependencies when changed
 # https://docs.tilt.dev/api.html#api.docker_build
 # https://docs.tilt.dev/live_update_reference.html
-docker_build(
+api_image = docker_build_with_latest(
     'tilt-avatar-api',
     context='.',
     dockerfile='./deploy/api.dockerfile',
     only=['./api/'],
-    live_update=[
+    live_update=lambda:[
         sync('./api/', '/app/api/'),
         run(
             'pip install -r /app/requirements.txt',
             trigger=['./api/requirements.txt']
         )
-    ]
+    ],
+    use_latest=use_latest
 )
 
 # k8s_yaml automatically creates resources in Tilt for the entities
 # and will inject any images referenced in the Tiltfile when deploying
 # https://docs.tilt.dev/api.html#api.k8s_yaml
-k8s_yaml('deploy/api.yaml')
+# k8s_yaml('deploy/api.yaml')
+deployment_create(
+    'api',
+    api_image,
+    ports='80:5000',
+    readiness_probe={'http_get':{'port': 5000,'path': '/ready'}}
+)
 
 # k8s_resource allows customization where necessary such as adding port forwards and labels
 # https://docs.tilt.dev/api.html#api.k8s_resource
@@ -62,7 +74,13 @@ docker_build(
 # k8s_yaml automatically creates resources in Tilt for the entities
 # and will inject any images referenced in the Tiltfile when deploying
 # https://docs.tilt.dev/api.html#api.k8s_yaml
-k8s_yaml('deploy/web.yaml')
+#k8s_yaml('deploy/web.yaml')
+deployment_create(
+    'web',
+    'tilt-avatar-web',
+    ports='3000',
+    env=[{'name': 'VITE_CLIENT_PORT', 'value': '5735'}]
+)
 
 # k8s_resource allows customization where necessary such as adding port forwards and labels
 # https://docs.tilt.dev/api.html#api.k8s_resource
