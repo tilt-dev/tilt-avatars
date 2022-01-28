@@ -1,8 +1,9 @@
 
-
 def docker_build_with_latest(ref, context, only=[], live_update=[], use_latest=False, **kwargs):
     if use_latest:
-        return latest_image(ref, True)
+        tags = decode_json(local('curl -sf %s/v2/%s/tags/list' % (registry_host, ref), quiet=True))
+        if 'latest' in tags['tags']:
+            return latest_image(ref, True)
 
     if type(live_update) == 'function':
         live_update = live_update()
