@@ -15,15 +15,19 @@
 #  use_latest(bool): True if Tilt should pull the :latest image from the shared registry
 #       instead of building from scratch. Any provided value is ignored if the Tilt
 #       subcommand is CI, when it is assumed to be false. Default: False
-#  push_from_ci(bool): True if `tilt ci` should push the built image to the
-#       shared registry with a :latest tag. Registry must already be authenticated
+#  push_images(bool | string): True if `tilt ci` should push the built image to the
+#       shared registry with a :latest tag. Pass string 'force' if image should be pushed
+#       regardless of subcommand. Registry must already be authenticated
 #       with `docker login` or a credential helper. Default: True
 #
 
 if os.name == 'nt':
     fail("Sorry! docker_build_with_latest is not yet compatible with Windows.")
 
-def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest=False, push_from_ci=True, **kwargs):
+def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest=False, push_images=True, **kwargs):
+    def is_push():
+        return push_images == 'force' or (push_images and config.tilt_subcommand == "ci")
+
     # Validate that registry is part of the ref
     if ref.count("/") == 0:
         fail("Registry host is required in image when using docker_build_with_latest, but was missing: %s" % ref)
@@ -46,13 +50,13 @@ def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest
 
 
     base = ref
-    if config.tilt_subcommand == "ci" and push_from_ci:
+    if is_push():
         base = ref+'-base'
 
     # Use case 1 and 3 - always build locally
     docker_build(base, context, live_update=live_update, ignore=ignore, **kwargs)
 
-    if config.tilt_subcommand != "ci" or not push_from_ci:
+    if not is_push():
         return
 
     # Use case 3 - push the built image

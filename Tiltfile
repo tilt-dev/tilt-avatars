@@ -34,7 +34,7 @@ docker_build_with_latest(
         )
     ],
     use_latest='api' in use_latest,
-    push_from_ci=push
+    push_images=push
 )
 
 # k8s_yaml automatically creates resources in Tilt for the entities
@@ -79,7 +79,7 @@ docker_build_with_latest(
         )
     ],
     use_latest='web' in use_latest,
-    push_from_ci=push
+    push_images=push
 )
 
 # k8s_yaml automatically creates resources in Tilt for the entities
