@@ -1,36 +1,68 @@
 
-def docker_build_with_latest(ref, context, only=[], live_update=[], use_latest=False, **kwargs):
-    if use_latest:
-        tags = decode_json(local('curl -sf %s/v2/%s/tags/list' % (registry_host, ref), quiet=True))
-        if 'latest' in tags['tags']:
-            return latest_image(ref, True)
+# Build a docker image, possibly pulling an image from a shared registry instead of building.
+#
+# There are three use cases to cover:
+# 1. I am working on the app in the image, always build and live_update
+#      docker_build_with_latest('gcr.io/my-images/myapp', '.', ..., use_latest=False)
+# 2. I'm not working on the app, pull the image from a shared registry,
+#    fall back to local build if the image can't be pulled
+#      docker_build_with_latest('gcr.io/my-images/myapp', '.', ..., use_latest=True)
+# 3. I'm running `tilt ci`, build the image and push to the shared registry
+#      docker_build_with_latest('gcr.io/my-images/myapp, '.', ...)
+#
+# Args specific to docker_build_with_latest:
+#
+#  use_latest(bool): True if Tilt should pull the :latest image from the shared registry
+#       instead of building from scratch. Any provided value is ignored if the Tilt
+#       subcommand is CI, when it is assumed to be false. Default: False
+#  push_from_ci(bool): True if `tilt ci` should push the built image to the
+#       shared registry with a :latest tag. Registry must already be authenticated
+#       with `docker login` or a credential helper. Default: True
+#
 
-    if type(live_update) == 'function':
-        live_update = live_update()
+if os.name == 'nt':
+    fail("Sorry! docker_build_with_latest is not yet compatible with Windows.")
 
-    docker_build(ref+'-base', context, only=only, live_update=live_update, **kwargs)
+def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest=False, push_from_ci=True, **kwargs):
+    # Validate that registry is part of the ref
+    if ref.count("/") == 0:
+        fail("Registry host is required in image when using docker_build_with_latest, but was missing: %s" % ref)
 
-    deps = [context]
-    if len(only) > 0:
-        deps = only
+    if use_latest and config.tilt_subcommand != "ci":
+        # Use case 2 - pull and use the latest image
+        pulled_ref = str(local("docker pull -q %s 2> /dev/null || echo ''" % ref, quiet=True)).strip()
 
+        if pulled_ref != "": # successfully pulled
+            custom_build(
+                ref,
+                "docker tag %s $EXPECTED_REF" % pulled_ref,
+                deps=[context],
+                live_update=live_update,
+                ignore=ignore
+            )
+            return
+
+        print("Image %s not pulled, falling back to regular build" % ref)
+
+
+    base = ref
+    if config.tilt_subcommand == "ci" and push_from_ci:
+        base = ref+'-base'
+
+    # Use case 1 and 3 - always build locally
+    docker_build(base, context, live_update=live_update, ignore=ignore, **kwargs)
+
+    if config.tilt_subcommand != "ci" or not push_from_ci:
+        return
+
+    # Use case 3 - push the built image
     custom_build(
         ref,
         """
         docker tag $TILT_IMAGE_0 $EXPECTED_REF && \
-          docker push $EXPECTED_REF && \
-          docker tag $TILT_IMAGE_0 ${EXPECTED_REF%:*}:latest && \
-          docker push ${EXPECTED_REF%:*}:latest
-        """,
-        deps=deps,
-        image_deps=[ref+'-base']
+          docker tag $TILT_IMAGE_0 {ref}:latest && \
+          docker push {ref}:latest
+        """.format(ref=ref),
+        deps=[context],
+        image_deps=[base]
     )
-    return ref
-
-registry_host = str(local('kubectl get configmap -n kube-public local-registry-hosting -o jsonpath="{.data[\'localRegistryHosting\\.v1\']}" | yj -yj | jq -r .host')).strip()
-
-def latest_image(ref, use_latest=False):
-    if use_latest:
-        return '%s/%s' % (registry_host, ref)
-    else:
-        return ref

@@ -4,8 +4,14 @@ load('ext://deployment', 'deployment_create')
 # https://docs.tilt.dev/api.html#api.version_settings
 version_settings(constraint='>=0.22.2')
 
+config.define_string('registry', usage="The registry URL where images are saved")
+config.define_bool('use-latest', usage="When present Tilt will pull pre-built images from gcr.io")
+config.define_bool('push', usage="When present `tilt ci` will build and push images to gcr.io")
+cfg = config.parse()
+registry_host = cfg.get('registry', 'gcr.io/windmill-public-containers')
+use_latest = cfg.get('use-latest', False)
+push = cfg.get('push', False)
 
-use_latest = False
 load('deploy/Tiltfile', 'docker_build_with_latest')
 
 # tilt-avatar-api is the backend (Python/Flask app)
@@ -13,19 +19,20 @@ load('deploy/Tiltfile', 'docker_build_with_latest')
 # and runs pip (python package manager) to update dependencies when changed
 # https://docs.tilt.dev/api.html#api.docker_build
 # https://docs.tilt.dev/live_update_reference.html
-api_image = docker_build_with_latest(
-    'tilt-avatar-api',
+docker_build_with_latest(
+    '%s/tilt-avatar-api' % registry_host,
     context='.',
     dockerfile='./deploy/api.dockerfile',
     only=['./api/'],
-    live_update=lambda:[
+    live_update=[
         sync('./api/', '/app/api/'),
         run(
             'pip install -r /app/requirements.txt',
             trigger=['./api/requirements.txt']
         )
     ],
-    use_latest=use_latest
+    use_latest=use_latest,
+    push_from_ci=push
 )
 
 # k8s_yaml automatically creates resources in Tilt for the entities
@@ -34,7 +41,7 @@ api_image = docker_build_with_latest(
 # k8s_yaml('deploy/api.yaml')
 deployment_create(
     'api',
-    api_image,
+    '%s/tilt-avatar-api' % registry_host,
     ports='80:5000',
     readiness_probe={'http_get':{'port': 5000,'path': '/ready'}}
 )
@@ -55,8 +62,8 @@ k8s_resource(
 # changed dynamically at runtime
 # https://docs.tilt.dev/api.html#api.docker_build
 # https://docs.tilt.dev/live_update_reference.html
-docker_build(
-    'tilt-avatar-web',
+docker_build_with_latest(
+    '%s/tilt-avatar-web' % registry_host,
     context='.',
     dockerfile='./deploy/web.dockerfile',
     only=['./web/'],
@@ -68,7 +75,9 @@ docker_build(
             'yarn install',
             trigger=['./web/package.json', './web/yarn.lock']
         )
-    ]
+    ],
+    use_latest=use_latest,
+    push_from_ci=push
 )
 
 # k8s_yaml automatically creates resources in Tilt for the entities
@@ -77,7 +86,7 @@ docker_build(
 #k8s_yaml('deploy/web.yaml')
 deployment_create(
     'web',
-    'tilt-avatar-web',
+    '%s/tilt-avatar-web' % registry_host,
     ports='3000',
     env=[{'name': 'VITE_CLIENT_PORT', 'value': '5735'}]
 )
