@@ -24,9 +24,11 @@
 if os.name == 'nt':
     fail("Sorry! docker_build_with_latest is not yet compatible with Windows.")
 
-def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest=False, push_images=True, **kwargs):
+def docker_build_with_latest(ref, context, live_update=[], only=[], ignore=[], use_latest=False, push_images=True, **kwargs):
     def is_push():
         return push_images == 'force' or (push_images and config.tilt_subcommand == "ci")
+
+    deps = only if len(only) > 0 else [context]
 
     # Validate that registry is part of the ref
     if ref.count("/") == 0:
@@ -40,9 +42,9 @@ def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest
             custom_build(
                 ref,
                 "docker tag %s $EXPECTED_REF" % pulled_ref,
-                deps=[context],
+                deps=deps,
                 live_update=live_update,
-                ignore=ignore
+                ignore=ignore,
             )
             return
 
@@ -54,7 +56,7 @@ def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest
         base = ref+'-base'
 
     # Use case 1 and 3 - always build locally
-    docker_build(base, context, live_update=live_update, ignore=ignore, **kwargs)
+    docker_build(base, context, only=only, live_update=live_update, ignore=ignore, **kwargs)
 
     if not is_push():
         return
@@ -67,6 +69,8 @@ def docker_build_with_latest(ref, context, live_update=[], ignore=[], use_latest
           docker tag $TILT_IMAGE_0 {ref}:latest && \
           docker push {ref}:latest
         """.format(ref=ref),
-        deps=[context],
-        image_deps=[base]
+        deps=deps,
+        live_update=live_update,
+        ignore=ignore,
+        image_deps=[base],
     )
