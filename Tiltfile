@@ -6,7 +6,7 @@ version_settings(constraint='>=0.22.2')
 
 
 use_latest = False
-load('Tiltfile.docker_build_with_latest', 'docker_build_with_latest')
+load('deploy/Tiltfile', 'docker_build_with_latest')
 
 # tilt-avatar-api is the backend (Python/Flask app)
 # live_update syncs changed source code files to the correct place for the Flask dev server
