@@ -11,7 +11,7 @@ cfg = config.parse()
 registry_host = cfg.get('registry', 'gcr.io/windmill-public-containers')
 use_latest_all = ['api', 'web']
 use_latest = cfg.get('use-latest', [])
-use_latest = use_latest_all if use_latest == ['all'] else None
+use_latest = use_latest_all if use_latest == ['all'] else use_latest
 push = cfg.get('push', False)
 
 load('deploy/Tiltfile', 'docker_build_with_latest')
