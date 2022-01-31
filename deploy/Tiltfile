@@ -36,12 +36,12 @@ def docker_build_with_latest(ref, context, live_update=[], only=[], ignore=[], u
 
     if use_latest and config.tilt_subcommand != "ci":
         # Use case 2 - pull and use the latest image
-        pulled_ref = str(local("docker pull -q %s 2> /dev/null || echo ''" % ref, quiet=True)).strip()
+        output = str(local("docker pull %s || echo 'pull failed'" % ref)).strip()
 
-        if pulled_ref != "": # successfully pulled
+        if not output.endswith("pull failed"): # successfully pulled
             custom_build(
                 ref,
-                "docker tag %s $EXPECTED_REF" % pulled_ref,
+                "docker tag %s $EXPECTED_REF" % ref,
                 deps=deps,
                 live_update=live_update,
                 ignore=ignore,
