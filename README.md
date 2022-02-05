@@ -12,8 +12,17 @@ These only cover a small subset of Tilt functionality but have been chosen to mi
 Even if you're using other technologies (e.g. `podman` or `helm`), we recommend starting here to learn the Tilt fundamentals.
 After you're comfortable with how Tilt works, we've got a more comprehensive guide on authoring your first `Tiltfile` from scratch that covers much more.
 
+## Prerequisites
+
+* Node 16 (recommend installing with [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+* [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable) (tested with 1.22.17)
+* Docker (tested with docker 20.10.12)
+* Kubernetes cluster (1.18+)
+* [Tilt](https://docs.tilt.dev/install.html)
+
+For more details on installation read the tilt tutorial on [prerequisites](https://docs.tilt.dev/tutorial/1-prerequisites.html)
+
 ## Running
-You'll need to first install Tilt and prerequisites (Docker + local Kubernetes cluster).
 
 Once you've installed Tilt, clone this repo and launch Tilt:
 ```sh
