@@ -4,6 +4,7 @@ load('ext://deployment', 'deployment_create')
 # https://docs.tilt.dev/api.html#api.version_settings
 version_settings(constraint='>=0.22.2')
 
+config.define_string_list('resources', args=True)
 config.define_string('registry', usage="The registry `url` where images are saved")
 config.define_string_list('use-latest', usage="Names of `resources` for which Tilt will pull pre-built images from gcr.io ('all' for all resources)")
 config.define_bool('push', usage="When present tilt ci will build and push images to gcr.io")
@@ -13,6 +14,7 @@ use_latest_all = ['api', 'web']
 use_latest = cfg.get('use-latest', [])
 use_latest = use_latest_all if use_latest == ['all'] else use_latest
 push = cfg.get('push', False)
+config.set_enabled_resources(cfg.get('resources', []))
 
 load('deploy/Tiltfile', 'docker_build_with_latest')
 
@@ -98,6 +100,7 @@ deployment_create(
 k8s_resource(
     'web',
     port_forwards='5735:3000',
+    resource_deps=['api'],
     labels=['frontend']
 )
 
