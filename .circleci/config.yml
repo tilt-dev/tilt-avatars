@@ -1,0 +1,11 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: tiltdev/tilt:latest
+
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.6
+      - run: ctlptl create cluster kind --registry=ctlptl-registry && tilt ci
