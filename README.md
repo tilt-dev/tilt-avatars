@@ -1,4 +1,7 @@
 # Tilt Avatars - Getting Started Sample Project
+
+[![Build Status](https://circleci.com/gh/tilt-dev/tilt-avatars/tree/main.svg?style=shield)](https://circleci.com/gh/tilt-dev/tilt-avatars)
+
 Tilt Avatars is a small sample project used by the Tilt Getting Started guide.
 
 It consists of a Python web API backend to generate avatars and a Javascript SPA (single page app) frontend.
