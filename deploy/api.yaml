@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: tilt-avatar-api
-          image: tilt-avatar-api
+          image: gcr.io/windmill-public-containers/tilt-avatar-api
           ports:
             - containerPort: 5000
           readinessProbe:

@@ -3,16 +3,17 @@
 # https://docs.tilt.dev/api.html#api.version_settings
 version_settings(constraint='>=0.22.2')
 
+def live_update_only(ref, deps=[], live_update=[], **kwargs):
+    custom_build(ref, "docker pull %s && docker tag %s $EXPECTED_REF" % (ref, ref), deps=deps, live_update=live_update, **kwargs)
+
 # tilt-avatar-api is the backend (Python/Flask app)
 # live_update syncs changed source code files to the correct place for the Flask dev server
 # and runs pip (python package manager) to update dependencies when changed
 # https://docs.tilt.dev/api.html#api.docker_build
 # https://docs.tilt.dev/live_update_reference.html
-docker_build(
-    'tilt-avatar-api',
-    context='.',
-    dockerfile='./deploy/api.dockerfile',
-    only=['./api/'],
+live_update_only(
+    'gcr.io/windmill-public-containers/tilt-avatar-api',
+    deps=['./api/'],
     live_update=[
         sync('./api/', '/app/api/'),
         run(
@@ -43,12 +44,9 @@ k8s_resource(
 # changed dynamically at runtime
 # https://docs.tilt.dev/api.html#api.docker_build
 # https://docs.tilt.dev/live_update_reference.html
-docker_build(
-    'tilt-avatar-web',
-    context='.',
-    dockerfile='./deploy/web.dockerfile',
-    only=['./web/'],
-    ignore=['./web/dist/'],
+live_update_only(
+    'gcr.io/windmill-public-containers/tilt-avatar-web',
+    deps=['./web/'],
     live_update=[
         fall_back_on('./web/vite.config.js'),
         sync('./web/', '/app/'),

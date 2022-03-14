@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: tilt-avatar-web
-          image: tilt-avatar-web
+          image: gcr.io/windmill-public-containers/tilt-avatar-web
           env:
             - name: VITE_CLIENT_PORT
               value: '5735'
