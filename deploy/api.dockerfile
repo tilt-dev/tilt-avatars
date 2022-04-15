@@ -1,4 +1,4 @@
-FROM python:3.9-alpine
+FROM python:3.10-slim-bullseye
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK="1"
 
