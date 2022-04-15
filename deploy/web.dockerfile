@@ -1,4 +1,4 @@
-FROM node:16-buster-slim
+FROM node:16-bullseye-slim
 
 ENV YARN_CACHE_FOLDER=/cache/yarn
 
