@@ -58,7 +58,7 @@ def avatar():
     svg = pa.Avatar(
         style=pa.AvatarStyle.CIRCLE,
         background_color='#03C7D3',
-        clothing=pa.ClothingType.TILT_SHIRT,
+        clothing='tilt_shirt',
         clothing_color='#20BA31',
         **params
     ).render()
