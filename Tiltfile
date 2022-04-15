@@ -74,7 +74,7 @@ k8s_resource(
 
 # config.main_path is the absolute path to the Tiltfile being run
 # there are many Tilt-specific built-ins for manipulating paths, environment variables, parsing JSON/YAML, and more!
-# https://docs.tilt.dev/api.html#modules.config.main_path
+# https://docs.tilt.dev/api.html#api.config.main_path
 tiltfile_path = config.main_path
 
 # print writes messages to the (Tiltfile) log in the Tilt UI
