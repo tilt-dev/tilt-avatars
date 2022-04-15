@@ -79,13 +79,16 @@ tiltfile_path = config.main_path
 
 # print writes messages to the (Tiltfile) log in the Tilt UI
 # the Tiltfile language is Starlark, a simplified Python dialect, which includes many useful built-ins
+# config.tilt_subcommand makes it possible to only run logic during `tilt up` or `tilt down`
 # https://github.com/bazelbuild/starlark/blob/master/spec.md#print
-print("""
-\033[32m\033[32mHello World from tilt-avatars!\033[0m
-    
-If this is your first time using Tilt and you'd like some guidance, we've got a tutorial to accompany this project:
+# https://docs.tilt.dev/api.html#api.config.tilt_subcommand
+if config.tilt_subcommand == 'up':
+    print("""
+    \033[32m\033[32mHello World from tilt-avatars!\033[0m
+
+    If this is your first time using Tilt and you'd like some guidance, we've got a tutorial to accompany this project:
     https://docs.tilt.dev/tutorial
 
-If you're feeling particularly adventurous, try opening `{tiltfile}` in an editor and making some changes while Tilt is running.
-What happens if you intentionally introduce a syntax error? Can you fix it?
-""".format(tiltfile=tiltfile_path))
+    If you're feeling particularly adventurous, try opening `{tiltfile}` in an editor and making some changes while Tilt is running.
+    What happens if you intentionally introduce a syntax error? Can you fix it?
+    """.format(tiltfile=tiltfile_path))
