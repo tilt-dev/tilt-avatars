@@ -12,6 +12,18 @@ docker_build(
     ]
 )
 
+k8s_custom_deploy(
+    'image-config',
+    apply_cmd="kubectl create configmap image-config --from-literal=IMAGE=$TILT_IMAGE_0 -o=yaml --dry-run=client | kubectl apply -f - -o=yaml",
+    delete_cmd="kubectl delete configmap image-config",
+    deps=[],
+    image_deps=['tilt-avatar-api'],
+)
+k8s_resource(
+    'image-config',
+    labels=['backend'],
+    pod_readiness='ignore',
+)
 
 k8s_yaml('deploy/api.yaml')
 k8s_resource(

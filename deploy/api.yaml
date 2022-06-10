@@ -23,6 +23,9 @@ spec:
             httpGet:
               port: 5000
               path: '/ready'
+          envFrom:
+            - configMapRef:
+                name: image-config
 ---
 apiVersion: v1
 kind: Service
