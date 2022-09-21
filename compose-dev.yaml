@@ -1,0 +1,94 @@
+services:
+  cluster:
+    image: docker/tilt-ctlptl
+    # TODO: use this experimental var to have cluster use compose project
+    # network, or use regular `kind` network? External or created by this
+    # project?
+    environment:
+      - KIND_EXPERIMENTAL_DOCKER_NETWORK=${COMPOSE_PROJECT_NAME}_default
+    command: |
+      bash -c 'cat <<EOF | ctlptl apply -f - && sleep infinity
+      apiVersion: ctlptl.dev/v1alpha1
+      kind: Registry
+      name: tilt-avatars-registry
+      ---
+      apiVersion: ctlptl.dev/v1alpha1
+      kind: Cluster
+      product: kind
+      name: kind-tilt-avatars
+      registry: tilt-avatars-registry
+      EOF'
+    healthcheck:
+      test: kubectl get nodes
+      interval: 1s
+      retries: 10
+      start_period: 20s
+    volumes:
+    - kubeconfig:/root/.kube
+    - /var/run/docker.sock:/var/run/docker.sock
+
+  cluster-down:
+    image: docker/tilt-ctlptl
+    command: |
+      ctlptl delete cluster kind-tilt-avatars --cascade=true
+    volumes_from:
+    - cluster
+    profiles:
+    - cli
+
+  tilt-up:
+    image: docker/tilt
+    environment:
+    # This should probably be the default inside Tilt now
+    - TILT_DISABLE_ANALYTICS=1
+    # FIXME: Need to tell Tilt to bind to 0.0.0.0 in order to reach it from container
+    # port on the host
+    - TILT_HOST=0.0.0.0
+    command: |
+      tilt up
+    ports:
+    - '10350:10350'
+    # TODO: deal with hard-coded port forwards
+    - '5734:5734'
+    - '5735:5735'
+    working_dir: /app
+    volumes_from:
+    - cluster
+    volumes:
+    - .:/app
+    depends_on:
+      cluster:
+        condition: service_healthy
+
+  # Run ctlptl commands: `docker compose run --rm ctlptl get clusters`
+  ctlptl:
+    image: docker/tilt-ctlptl
+    entrypoint: ctlptl
+    volumes_from:
+    - cluster
+    profiles:
+    - cli
+
+  # Run tilt commands: `docker compose run --rm tilt get session`
+  tilt:
+    image: docker/tilt
+    entrypoint: docker exec -i $COMPOSE_PROJECT_NAME-tilt-up-1 tilt
+    volumes_from:
+    - tilt-up
+    profiles:
+    - cli
+
+  # TODO: Service which listens for tilt portforwards and starts new kubectl
+  # portforward docker container for each port so that ports don't need to be
+  # hard-coded
+  # port-forwards:
+  #   image: docker/tilt
+  #   command: |
+  #     bash -c 'while true; do
+  #       docker exec -i $COMPOSE_PROJECT_NAME-tilt-up-1 tilt get portforwards --watch -o json | ...
+  #     done'
+  #   volumes:
+  #   - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  kubeconfig:
