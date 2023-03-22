@@ -31,9 +31,15 @@ part_mapping = {
     'accessory': 'AccessoryType',
 }
 
+docker_blue = '#086DD7'
+tilt_green = '#20BA31'
 
 @app.before_first_request
 def initialize():
+    try:
+        pa.ClothingType.DOCKER_SHIRT
+    except AttributeError:
+        pa.install_part(str(pathlib.Path(__file__).parent.joinpath('docker_shirt.svg')), pa.ClothingType)
     try:
         pa.ClothingType.TILT_SHIRT
     except AttributeError:
@@ -55,11 +61,19 @@ def avatar():
             # enum by value, e.g. `#262E33`
             params[p] = part_enum(params[p])
 
+    clothing = 'tilt_shirt'
+    clothing_color = tilt_green
+
+    # ↓↓↓ remove the leading # to uncomment ↓↓↓
+    #clothing = 'docker_shirt'
+    #clothing_color = docker_blue
+    # ↑↑↑ remove the leading # to uncomment ↑↑↑
+
     svg = pa.Avatar(
         style=pa.AvatarStyle.CIRCLE,
         background_color='#03C7D3',
-        clothing='tilt_shirt',
-        clothing_color='#20BA31',
+        clothing=clothing,
+        clothing_color=clothing_color,
         **params
     ).render()
     return flask.Response(svg, mimetype='image/svg+xml')
