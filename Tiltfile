@@ -68,7 +68,7 @@ k8s_yaml('deploy/web.yaml')
 # https://docs.tilt.dev/api.html#api.k8s_resource
 k8s_resource(
     'web',
-    port_forwards='5735:3000',
+    port_forwards='5735:5173', # 5173 is the port Vite listens on in the container
     labels=['frontend']
 )
 
